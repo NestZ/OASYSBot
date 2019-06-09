@@ -1,6 +1,9 @@
-from twython import Twython
 import requests
 import datetime
+import os
+from twython import Twython
+from PIL import Image, ImageDraw, ImageFont
+from picamera import PiCamera
 
 #API end-point
 URL = "https://www.cmuccdc.org/api/dustboy/value/6/avghr/all?format=json"
@@ -23,7 +26,6 @@ JSONData = requests.get(url = URL).json()
 #LoadData:
 pm25Data = JSONData[0]["value"][0]["pm25"]
 pm10Data = JSONData[0]["value"][0]["pm10"]
-#dateData = JSONData[0]["value"][0]["log_datetime"]
 nameData = JSONData[0]["dustboy_name"]
 
 #GetTime
@@ -32,14 +34,36 @@ time = datetime.datetime.now()
 #assignString:
 DATE = 'Date : ' + time.strftime("%d") + '/' + time.strftime("%m") + '/' + time.strftime("%Y")
 TIME = 'Time : ' + time.strftime("%H") + ':' + time.strftime("%M") + ':' + time.strftime("%S")
-PM10 = 'PM 10 : ' + pm10Data
-PM25 = 'PM 2.5 : ' + pm25Data
+PM10 = 'PM 10 : ' + pm10Data + u' \u03BC' + 'g/' + u'm\u00b3'
+PM25 = 'PM 2.5 : ' + pm25Data + u' \u03BC' + 'g/' + u'm\u00b3'
 STATIONNAME = 'Station : ' + nameData
+
+#TakePic:
+camera = PiCamera()
+camera.capture("/home/pi/Desktop/cbpic/pic1.jpg")
+
+#MergePic:
+Pic = Image.open("./img/Picture.jpg")
+Logo = Image.open("./img/logo.jpg")
+area = (1600,925,1856,1046)
+Pic.paste(Logo, area)
+Pic.save('./img/cbpic.png')
+
+#InsertText:
+Status = DATE + '\n' + TIME + '\n' + STATIONNAME + '\n' + PM10 + '\n' + PM25 + '\n'
+Cbpic = Image.open('./img/cbpic.png')
+font_type = ImageFont.truetype('DejaVuSerif.ttf',28)
+draw = ImageDraw.Draw(Cbpic)
+draw.text(xy=(1275,925),text=Status,fill=(0,0,0),font=font_type)
+Cbpic.save('./img/cbpic.png')
 
 #LoadPic:
 photo = open('./img/logo.png', 'rb')
 response = twitter.upload_media(media=photo)
 
 #Tweet:
-Status = DATE + '\n' + TIME + '\n' + STATIONNAME + '\n' + PM10 + '\n' + PM25 + '\n'
 twitter.update_status(status=Status, media_ids=[response['media_id']])
+
+#Success:
+os.remove("./img/cbpic.png")
+print ("All Complete")
