@@ -40,7 +40,7 @@ STATIONNAME = 'Station : ' + nameData
 
 #TakePic:
 camera = PiCamera()
-camera.capture("/home/pi/Desktop/cbpic/pic1.jpg")
+camera.capture("./img/Picture.jpg")
 
 #MergePic:
 Pic = Image.open("./img/Picture.jpg")
@@ -58,12 +58,13 @@ draw.text(xy=(1275,925),text=Status,fill=(0,0,0),font=font_type)
 Cbpic.save('./img/cbpic.png')
 
 #LoadPic:
-photo = open('./img/logo.png', 'rb')
+photo = open('./img/cbpic.png', 'rb')
 response = twitter.upload_media(media=photo)
 
 #Tweet:
 twitter.update_status(status=Status, media_ids=[response['media_id']])
 
 #Success:
+os.remove("./img/Picture.jpg")
 os.remove("./img/cbpic.png")
 print ("All Complete")
